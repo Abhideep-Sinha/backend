@@ -1,33 +1,41 @@
-import {v2 as cloudinary} from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-(async function() {
+// ✅ Configure Cloudinary
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+});
 
-    // Configuration
-    cloudinary.config({ 
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-        api_key: process.env.CLOUDINARY_API_KEY, 
-        api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View API Keys' above to copy your API secret
+// ✅ Upload function
+const uploadOnCloudinary = async (localFilePath, folder = "uploads") => {
+  try {
+    if (!localFilePath) return null;
+
+    // 📤 Upload file
+    const result = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+      folder
     });
 
-    //Can upload image drectly from url or first store it in local and then upload it. Second is proffesional
-    const uploadOnCloudinary = async(localFilePath) => {
-        try{
-            if(!localFilePath) return null;
-            const response = await cloudinary.uploader.upload(localFilePath, { //uploading image from local
-                resoure_type: "auto",
-            }); // uploaded
-            console.log("File uploaded", response.url);
-            return response;
-        }
-        catch(error){
-            fs.unlinkSync(localFilePath); // removes the locally linked file as the operation failed
-            return null;
-        }
-    }
-})
+    // 🧹 Delete file after upload
+    fs.unlinkSync(localFilePath);
 
-export {cloudinary};
+    return result;
+  } catch (error) {
+    console.error("❌ Cloudinary upload error:", error.message);
+
+    // Delete file if upload fails
+    if (fs.existsSync(localFilePath)) {
+      fs.unlinkSync(localFilePath);
+    }
+
+    throw error;
+  }
+};
+
+export { uploadOnCloudinary };
 
 //     // Upload an image
 //      const uploadResult = await cloudinary.uploader

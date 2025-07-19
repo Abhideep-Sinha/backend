@@ -1,24 +1,21 @@
-import express, { urlencoded } from "express";
-import cookieParser from "cookie-parser";
+import express from "express";
 import cors from "cors";
+import userRoutes from "./routes/user.routes.js";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
-
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
-}))
+  origin: process.env.CORS_ORIGIN,
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
+app.use(cookieParser())
 
-app.use(express.json({limit: "15kb"}));
-app.use(urlencoded({extended: true, limit: "15kb"}));
-app.use(express.static("public"));
-app.use(cookieParser());
+// API routes
+app.use("/api/users", userRoutes);
 
-//routes import
-import {userRoutes} from "./routes/user.routes.js";
-
-//routes decaration
-app.use("/api/v1/user", userRoutes);
-
-export {app};
+export default app;
